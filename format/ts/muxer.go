@@ -224,9 +224,11 @@ func (self *Muxer) WritePacket(pkt av.Packet) (err error) {
 
 		nalus := self.nalus[:0]
 		if pkt.IsKeyFrame {
+			// VPS must precede SPS (which references vps_id), and SPS must
+			// precede PPS (which references sps_id).
+			nalus = append(nalus, codec.VPS())
 			nalus = append(nalus, codec.SPS())
 			nalus = append(nalus, codec.PPS())
-			nalus = append(nalus, codec.VPS())
 		}
 		pktnalus, _ := h265parser.SplitNALUs(pkt.Data)
 		for _, nalu := range pktnalus {

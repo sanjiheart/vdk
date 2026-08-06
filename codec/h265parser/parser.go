@@ -123,7 +123,12 @@ func IsDataNALU(b []byte) bool {
 }
 
 var StartCodeBytes = []byte{0, 0, 1}
-var AUDBytes = []byte{0, 0, 0, 1, 0x9, 0xf0, 0, 0, 0, 1} // AUD
+
+// AUD: H.265 NAL headers are 2 bytes (type is bits 1-6 of byte 0), unlike H.264's
+// 1-byte header. This was previously copied verbatim from h264parser's AUDBytes,
+// so the 0x9 byte decoded as nal_unit_type=4 (STSA_N) instead of 35 (AUD_NUT),
+// corrupting every access unit written by the TS muxer.
+var AUDBytes = []byte{0, 0, 0, 1, 0x46, 0x01, 0x50, 0, 0, 0, 1} // AUD (nal_unit_type=35)
 
 func CheckNALUsType(b []byte) (typ int) {
 	_, typ = SplitNALUs(b)
